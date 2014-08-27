@@ -33,17 +33,22 @@ module.exports = function (grunt) {
       var filepath = fs.realpathSync(path.join(mockDir, filename)),
           resource = require(filepath);
 
-      // rel name is the directory name of the file
-      resource.rel = filename.split('/')[0];
+      var calls = _.isArray(resource) ? resource : [resource];
+      calls = _.map(calls, function (call) {
+        // rel name is the directory name of the file
+        call.rel = filename.split('/')[0];
 
-      // add URIs for resources
-      if (resource.rel === 'Root') {
-        resource.uri = baseURL;
-      }
-      else {
-        resource.uri = baseURL + resource.rel;
-      }
-      return resource;
+        // add URIs for resources
+        if (call.rel === 'Root') {
+          call.uri = baseURL;
+        }
+        else {
+          call.uri = baseURL + call.rel;
+        }
+        return call;
+      });
+
+      return calls;
     });
 
     // if not default scenario, merge in default resources
@@ -85,11 +90,11 @@ module.exports = function (grunt) {
       return _.object(_.map(scenario, function (resource) {
         // return key-value array for _.object
         return [
-          resource.rel,
+          resource[0].rel,
           {
-            rel: resource.rel,
-            href: resource.uri,
-            method: resource.httpMethod
+            rel: resource[0].rel,
+            href: resource[0].uri,
+            method: resource[0].httpMethod
           }
         ];
       }));
@@ -103,16 +108,17 @@ module.exports = function (grunt) {
    */
   var scenarioWithLinks = function (links, scenario) {
     return _.map(scenario, function (resource) {
-      var resourceClone = _.cloneDeep(resource);
-      if (resourceClone.response) {
-        if (resourceClone.relNames) {
-          resourceClone.response._links = _.pick(links, resourceClone.relNames);
+      return _.map(resource, function (call) {
+        if (call.response) {
+          if (call.relNames) {
+            call.response._links = _.pick(links, call.relNames);
+          }
+          else {
+            call.response._links = links;
+          }
         }
-        else {
-          resourceClone.response._links = links;
-        }
-      }
-      return resourceClone;
+        return call;
+      });
     });
   };
 
@@ -132,7 +138,7 @@ module.exports = function (grunt) {
   var readScenarioData = function (baseURL, mockDir) {
     var data = readMockManifest(baseURL, mockDir),
         dataWithLinks = scenarioDataWithLinks(data);
-    return JSON.stringify(dataWithLinks);
+    return JSON.stringify(dataWithLinks, null, 2);
   };
 
   /**

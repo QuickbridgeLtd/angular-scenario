@@ -30,10 +30,37 @@ A resource file might look like this:
     {
       "httpMethod": "GET",
       "statusCode": 200,
+      "headers": {
+      	"X-Token": "32342343424234adfas"
+      },
       "response": {
         "id": "foo"
       }
     }
+
+You can also queue responses so that subsequent calls to the same rel can simulate a status workflow in the backend over time...
+
+	[
+	  {
+	    "httpMethod": "GET",
+	    "statusCode": 204,
+	    "headers": {
+	      "Retry-After": 2
+	    },
+	    "response": {}
+	  },
+	  {
+	    "httpMethod": "GET",
+	    "statusCode": 200,
+	    "response": {
+	      "type":"Redirecting",
+	      "id":"4720b8e7-3384-406a-96fc-536e3baf7553",
+	      "accountId":"3c099d9a-b7ec-4071-8f41-17201a5ee1ec",
+	      "provider":"FreeAgent",
+	      "status":"AuthorisationCreated"
+	    }
+	  }
+	]
 
 The manifest file `mockResources.json` defines the available scenarios and
 describes which version of each resource should be used for each scenario.

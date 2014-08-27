@@ -37,67 +37,46 @@ angular
     '$httpBackend',
     'scenarioMockData',
     function ($q, $http, $httpBackend, scenarioMockData) {
-      var setupHttpBackendForMockResource = function (deferred, mock) {
+
+      var setupHttpBackendForMockResource = function (mock) {
+
         var mockHeaders = {
           'Content-Type': 'application/vnd.wonga.rest+json; charset=utf-8'
         };
 
-        // Mock a polling resource.
-        if (mock.poll) {
-          var pollCounter = 0,
-              pollCount = _.has(mock, 'pollCount') ? mock.pollCount : 2;
-
-          // Respond with a 204 which will then get polled until a 200 is
-          // returned.
-          $httpBackend
-            .when(mock.httpMethod, mock.uri, mock.requestData)
-            .respond(function () {
-             // Call a certain amount of times to simulate polling.
-              if (pollCounter < pollCount) {
-                pollCounter++;
-                return [204, {}, mockHeaders];
-              }
-              return [200, mock.response, mockHeaders];
-            });
-        } else {
-          $httpBackend
-            .when(mock.httpMethod, mock.uri, mock.requestData)
-            .respond(mock.statusCode, mock.response, mockHeaders);
-        }
-
-        // Make this http request now if required otherwise just resolve
-        if (mock.callInSetup) {
-          var req = {method: mock.httpMethod, url: mock.uri};
-          $http(req).success(function (response) {
-            deferred.resolve();
-          });
-        }
-        else {
-          deferred.resolve();
-        }
+        var responseCount = 0;
+        $httpBackend
+          .when(mock[0].httpMethod, mock[0].uri, mock[0].requestData)
+          .respond(function () {
+            var callIndex = Math.min(responseCount, mock.length - 1);
+            responseCount++;
+            return [
+              mock[callIndex].statusCode,
+              mock[callIndex].response,
+              _.merge(mockHeaders, mock[callIndex].headers)
+            ];
+          })
+        ;
       };
 
       return {
         setup: function (scenarioName) {
-          var deferred = $q.defer(),
-            actualScenarioName = scenarioName ||
-              scenarioMockData.getDefaultScenario(),
-            mockData = scenarioMockData.getMockData();
+          var mockData = scenarioMockData.getMockData();
+          var actualScenarioName =
+                scenarioName || scenarioMockData.getDefaultScenario();
 
           if (_.has(mockData, actualScenarioName)) {
             var scenario = mockData[actualScenarioName];
 
             // Set mock for each item.
             _.forOwn(scenario, function (mock) {
-              setupHttpBackendForMockResource(deferred, mock);
+              setupHttpBackendForMockResource(mock);
             });
           }
           else if (scenarioName) {
             // only write to console if scenario actively specified
             console.log('Mocks not found for: ' + scenarioName);
           }
-
-          return deferred.promise;
         }
       };
     }

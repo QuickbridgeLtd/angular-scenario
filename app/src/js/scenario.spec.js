@@ -2,42 +2,51 @@
 
 describe('scenario', function () {
   var mockHttpBackend, mockWindow, scenarioMockDataProvider, scenarioMockData,
-    scenarioMocks, scenarioName, scenario1, scenario2, pollScenario, scenarios;
+    scenarioMocks, scenarioName, scenario1, scenario2, queueScenario, scenarios,
+    httpRespondFunction;
 
   beforeEach(function () {
     scenario1 = [
-      {
+      [{
         'uri': 'http://example.com/test',
         'httpMethod': 'GET',
         'statusCode': 200,
         'response': {
-          'scenario': 1,
+          'scenario': 1
         }
-      }
+      }]
     ];
 
     scenario2 = [
-      {
+      [{
         'uri': 'http://example.com/test',
         'httpMethod': 'GET',
         'statusCode': 200,
         'response': {
-          'scenario': 1,
+          'scenario': 1
         }
-      }
+      }]
     ];
 
-    pollScenario = [
-      {
-        'uri': 'http://example.com/test',
-        'httpMethod': 'GET',
-        'statusCode': 200,
-        'poll': true,
-        'pollCount': 3,
-        'response': {
-          'scenario': 'poll',
+    queueScenario = [
+      [
+        {
+          'uri': 'http://example.com/test',
+          'httpMethod': 'GET',
+          'statusCode': 204,
+          'response': {
+            'scenario': 'poll'
+          }
+        },
+        {
+          'uri': 'http://example.com/test',
+          'httpMethod': 'GET',
+          'statusCode': 200,
+          'response': {
+            'scenario': 'poll'
+          }
         }
-      }
+      ]
     ];
 
     scenarios = {
@@ -50,6 +59,9 @@ describe('scenario', function () {
       'respond'
     ]);
     mockHttpBackend.when.andReturn(mockHttpBackend);
+    mockHttpBackend.respond.andCallFake(function respondFunction(fn) {
+      httpRespondFunction = fn;
+    });
 
     mockWindow = {location: {search: ''}};
   });
@@ -115,11 +127,11 @@ describe('scenario', function () {
       scenarioMocks.setup();
 
       // assert
-      var mockResource = scenario2[0];
+      var mockResource = scenario2[0][0];
       expect(mockHttpBackend.when).toHaveBeenCalledWith(
         mockResource.httpMethod, mockResource.uri, mockResource.requestData);
       expect(mockHttpBackend.respond).toHaveBeenCalledWith(
-        mockResource.statusCode, mockResource.response, jasmine.any(Object));
+        jasmine.any(Function));
     });
 
     it('should allow a client app to set the default scenario', function () {
@@ -154,11 +166,11 @@ describe('scenario', function () {
       setupScenarioMocks(scenarios);
 
       // assert
-      var mockResource = scenario2[0];
+      var mockResource = scenario2[0][0];
       expect(mockHttpBackend.when).toHaveBeenCalledWith(
         mockResource.httpMethod, mockResource.uri, mockResource.requestData);
       expect(mockHttpBackend.respond).toHaveBeenCalledWith(
-        mockResource.statusCode, mockResource.response, jasmine.any(Object));
+        jasmine.any(Function));
     });
 
     it('should do nothing if the specified scenario isn\'t found', function () {
@@ -172,16 +184,21 @@ describe('scenario', function () {
 
 
     it('should register a function to generate responses for mocks with ' +
-       'polling', function () {
+       'queues', function () {
       // arrange
-      setupScenarioMocks({'scenario2': pollScenario});
+      setupScenarioMocks({'scenario2': queueScenario});
 
       // assert
-      var mockResource = scenario2[0];
+      var mockResource = queueScenario[0][0];
       expect(mockHttpBackend.when).toHaveBeenCalledWith(
         mockResource.httpMethod, mockResource.uri, mockResource.requestData);
       expect(mockHttpBackend.respond)
         .toHaveBeenCalledWith(jasmine.any(Function));
+
+      var r1 = httpRespondFunction();
+      var r2 = httpRespondFunction();
+      expect(r1[0]).toBe(queueScenario[0][0].statusCode);
+      expect(r2[0]).toBe(queueScenario[0][1].statusCode);
     });
   });
 });
