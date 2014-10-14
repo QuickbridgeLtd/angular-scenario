@@ -1,4 +1,5 @@
-/* global describe, beforeEach, jasmine, module, inject, it, xit, expect */
+/* global angular, describe, beforeEach, jasmine, module, inject, it, xit,
+  expect */
 
 describe('scenario', function () {
   var mockHttpBackend, mockWindow, scenarioMockDataProvider, scenarioMockData,
@@ -56,7 +57,8 @@ describe('scenario', function () {
 
   describe('scenarioName', function () {
     beforeEach(function () {
-      module('scenario');
+      angular.module('testPlugins', ['scenario', 'pollingScenarioPlugin']);
+      module('testPlugins');
       inject(function (_scenarioName_) {
         scenarioName = _scenarioName_;
       });
@@ -76,8 +78,9 @@ describe('scenario', function () {
 
   describe('scenarioMockDataProvider', function () {
     beforeEach(function () {
+      angular.module('testPlugins', ['scenario', 'pollingScenarioPlugin']);
       module(
-        'scenario',
+        'testPlugins',
         function ($provide, _scenarioMockDataProvider_) {
           $provide.value('$httpBackend', mockHttpBackend);
           scenarioMockDataProvider = _scenarioMockDataProvider_;
@@ -118,8 +121,6 @@ describe('scenario', function () {
       var mockResource = scenario2[0];
       expect(mockHttpBackend.when).toHaveBeenCalledWith(
         mockResource.httpMethod, mockResource.uri, mockResource.requestData);
-      expect(mockHttpBackend.respond).toHaveBeenCalledWith(
-        mockResource.statusCode, mockResource.response, jasmine.any(Object));
     });
 
     it('should allow a client app to set the default scenario', function () {
@@ -137,8 +138,9 @@ describe('scenario', function () {
   describe('scenarioMocks', function () {
     var setupScenarioMocks = function (mockData) {
       mockWindow = {location: {search: '?scenario=scenario2'}};
+      angular.module('testPlugins', ['scenario', 'pollingScenarioPlugin']);
       module(
-        'scenario',
+        'testPlugins',
         function ($provide, _scenarioMockDataProvider_) {
           $provide.value('$httpBackend', mockHttpBackend);
           $provide.value('$window', mockWindow);
@@ -157,8 +159,6 @@ describe('scenario', function () {
       var mockResource = scenario2[0];
       expect(mockHttpBackend.when).toHaveBeenCalledWith(
         mockResource.httpMethod, mockResource.uri, mockResource.requestData);
-      expect(mockHttpBackend.respond).toHaveBeenCalledWith(
-        mockResource.statusCode, mockResource.response, jasmine.any(Object));
     });
 
     it('should do nothing if the specified scenario isn\'t found', function () {
@@ -180,8 +180,6 @@ describe('scenario', function () {
       var mockResource = scenario2[0];
       expect(mockHttpBackend.when).toHaveBeenCalledWith(
         mockResource.httpMethod, mockResource.uri, mockResource.requestData);
-      expect(mockHttpBackend.respond)
-        .toHaveBeenCalledWith(jasmine.any(Function));
     });
   });
 });

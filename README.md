@@ -56,6 +56,43 @@ The example above defines 2 scenarios `_default` and `loggedIn`. `loggedIn` has
 the default versions of the `Root` and `MobilePhone` resources, but overrides
 `Account`, using the version in `Account/loggedIn.json`.
 
+Custom Response Plugins
+----------------------
+
+If you have some custom functionality to implement for a particular mock, for
+example polling, you can implement it using a plugin. Look at the annotated
+example below to see how to create a plugin. An example is included in this
+repo as well - the 204PollingResponsePlugin.
+
+    angular
+      .module('myPluginModule', ['scenarioResponse'])
+      .config(['mockResponseHandlerProvider',
+        function (mockResponseHandlerProvider) {
+          // You must register your plugin with the mockResponseHandlerProvider.
+          mockResponseHandlerProvider
+            .registerResponsePlugin('myPlugin'); // This must be the name of your service.
+        }
+      ])
+      .factory('pollingResponsePlugin', [function () {
+          var headers = {};
+
+          return {
+            trigger: 'customTrigger', // if an attribute with this name is present in the mock, this plugin will be activated
+            setHeaders: function (_headers) {
+                // headers passed into this function should be added to the response
+              },
+            execute: function (mock) {
+              // the execute function must return a callback function that will be passed into the respond function
+              return function () {
+                // The callback must return an array with 3 values exactly as below
+                return [statusCode, responseBody, headers];
+              }
+            }
+          };
+        }]);
+
+To register this plugin, simply add 'myPluginModule' as a dependency in your app.
+
 Bower Component
 ---------------
 

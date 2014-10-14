@@ -1,7 +1,7 @@
 /* global angular, _, console */
 
 angular
-  .module('scenario', ['ui.router'])
+  .module('scenario', ['scenarioResponse', 'ui.router'])
 
   .provider('scenarioMockData', function () {
     var mockData = {},
@@ -36,34 +36,17 @@ angular
     '$http',
     '$httpBackend',
     'scenarioMockData',
-    function ($q, $http, $httpBackend, scenarioMockData) {
+    'mockResponseHandler',
+    function ($q, $http, $httpBackend, scenarioMockData, mockResponseHandler) {
+
       var setupHttpBackendForMockResource = function (deferred, mock) {
         var mockHeaders = {
           'Content-Type': 'application/vnd.wonga.rest+json; charset=utf-8'
         };
 
-        // Mock a polling resource.
-        if (mock.poll) {
-          var pollCounter = 0,
-              pollCount = _.has(mock, 'pollCount') ? mock.pollCount : 2;
-
-          // Respond with a 204 which will then get polled until a 200 is
-          // returned.
-          $httpBackend
-            .when(mock.httpMethod, mock.uri, mock.requestData)
-            .respond(function () {
-             // Call a certain amount of times to simulate polling.
-              if (pollCounter < pollCount) {
-                pollCounter++;
-                return [204, {}, mockHeaders];
-              }
-              return [200, mock.response, mockHeaders];
-            });
-        } else {
-          $httpBackend
-            .when(mock.httpMethod, mock.uri, mock.requestData)
-            .respond(mock.statusCode, mock.response, mockHeaders);
-        }
+        var requestCondition = $httpBackend
+        .when(mock.httpMethod, mock.uri, mock.requestData)
+        .respond.apply(null, mockResponseHandler(mock, mockHeaders));
 
         // Make this http request now if required otherwise just resolve
         if (mock.callInSetup) {
@@ -113,10 +96,7 @@ angular
     }
   ])
 
-  .controller('scenarioController', [
-    '$state',
-    '$stateParams',
-    'scenarioMocks',
+  .controller('scenarioController', [ '$state', '$stateParams', 'scenarioMocks',
     function ($state, $stateParams, scenarioMocks) {
       if (!_.isUndefined($stateParams.mock)) {
         scenarioMocks.setup($stateParams.mock).then(function () {
@@ -156,3 +136,4 @@ angular
       scenarioMocks.setup(scenarioName.extract($window.location.search));
     }
   ]);
+
