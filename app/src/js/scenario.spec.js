@@ -121,8 +121,6 @@ describe('scenario', function () {
       var mockResource = scenario2[0];
       expect(mockHttpBackend.when).toHaveBeenCalledWith(
         mockResource.httpMethod, mockResource.uri, mockResource.requestData);
-      expect(mockHttpBackend.respond).toHaveBeenCalledWith(
-        mockResource.statusCode, mockResource.response, jasmine.any(Object));
     });
 
     it('should allow a client app to set the default scenario', function () {
@@ -161,8 +159,6 @@ describe('scenario', function () {
       var mockResource = scenario2[0];
       expect(mockHttpBackend.when).toHaveBeenCalledWith(
         mockResource.httpMethod, mockResource.uri, mockResource.requestData);
-      expect(mockHttpBackend.respond).toHaveBeenCalledWith(
-        mockResource.statusCode, mockResource.response, jasmine.any(Object));
     });
 
     it('should do nothing if the specified scenario isn\'t found', function () {
@@ -184,8 +180,6 @@ describe('scenario', function () {
       var mockResource = scenario2[0];
       expect(mockHttpBackend.when).toHaveBeenCalledWith(
         mockResource.httpMethod, mockResource.uri, mockResource.requestData);
-      expect(mockHttpBackend.respond)
-        .toHaveBeenCalledWith(jasmine.any(Function));
     });
   });
 });

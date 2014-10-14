@@ -1,9 +1,8 @@
 /* global angular, describe, beforeEach, jasmine, module, inject, it, xit,
-  spyOn, console, expect */
+  spyOn, console, expect, iit */
 
 describe('mockResponseHandler', function () {
-  var mockResponseHandler, mockResponseWithTrigger, mockWithoutTrigger,
-    mockPlugin;
+  var mockResponseHandler, mockResponse, mockPlugin, testHolder;
   beforeEach(function () {
 
     angular.module('pluginTester', ['scenarioResponse'])
@@ -12,7 +11,7 @@ describe('mockResponseHandler', function () {
           mockResponseHandlerProvider.registerResponsePlugin('mockPlugin');
         }]);
 
-    mockResponseWithTrigger =  {
+    mockResponse =  {
       'uri': 'http://example.com/test',
       'httpMethod': 'GET',
       'statusCode': 200,
@@ -22,24 +21,15 @@ describe('mockResponseHandler', function () {
         'scenario': 'poll',
       }
     };
-    mockWithoutTrigger =  {
-      'uri': 'http://example.com/test',
-      'statusCode': 200,
-      'httpMethod': 'GET',
-      'response': {
-        'scenario': 'standard',
-      }
-    };
 
-    mockPlugin = {
-      trigger: 'mockTrigger',
-      setHeaders: function () {},
-      execute: function () {
-        return 'mockResponse';
+    testHolder = {
+      mockPlugin: function (response, mock) {
+        return response;
       }
     };
+    spyOn(testHolder, 'mockPlugin');
     module('pluginTester', function ($provide) {
-        $provide.value('mockPlugin', mockPlugin);
+        $provide.value('mockPlugin', testHolder.mockPlugin);
       });
 
     inject(function (_mockResponseHandler_) {
@@ -47,48 +37,13 @@ describe('mockResponseHandler', function () {
     });
   });
 
-  it('should use a plugin when its trigger parameter is present',
+  it('should call the plugin function',
     function () {
     // Act.
-    var pluginResponseCallback =
-      mockResponseHandler(mockResponseWithTrigger, {})[0];
+    mockResponseHandler(mockResponse, {});
 
     // Assert.
-    expect(pluginResponseCallback).toBe('mockResponse');
-  });
-
-  it('should return the default response value if no trigger is present',
-    function () {
-    // Act.
-    var pluginResponseArray =
-      mockResponseHandler(mockWithoutTrigger, {});
-
-    // Assert.
-    expect(pluginResponseArray).toEqual([200, {scenario: 'standard'}, {}]);
-  });
-
-  it('should use the specified headers for default responses',
-    function () {
-    // Act.
-    var pluginResponseArray =
-      mockResponseHandler(mockWithoutTrigger, {test: 'header'});
-
-    // Assert.
-    expect(pluginResponseArray[2]).toEqual({test: 'header'});
-  });
-
-  it('should pass in the specified headers to the plugin callback',
-    function () {
-    // Arrange.
-    spyOn(mockPlugin, 'setHeaders');
-
-    // Act.
-    var mockHeaders = {test: 'header'};
-    var pluginResponseArray =
-      mockResponseHandler(mockResponseWithTrigger, mockHeaders);
-
-    // Assert.
-    expect(mockPlugin.setHeaders).toHaveBeenCalledWith(mockHeaders);
+    expect(testHolder.mockPlugin).toHaveBeenCalled();
   });
 
 });

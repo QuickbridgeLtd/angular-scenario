@@ -12,14 +12,13 @@ angular
 
       this.$get = ['$injector', function ($injector) {
         return function (mock, mockHeaders) {
+          var plugin,
+          response =  [mock.statusCode, mock.response, mockHeaders];
           for (var i = 0; i < responseHandlerPluginRegistry.length; i++) {
-            var plugin = $injector.get(responseHandlerPluginRegistry[i]);
-            if (mock[plugin['trigger']] !== undefined) {
-              plugin.setHeaders(mockHeaders);
-              return [plugin.execute(mock)];
-            }
-            return [mock.statusCode, mock.response, mockHeaders];
+            plugin = $injector.get(responseHandlerPluginRegistry[i]);
+            response = plugin(response, mock);
           }
+          return response;
         };
       }];
     }]);
