@@ -103,7 +103,9 @@ and can contain a regex:
 "uri": "/customer/\\d*/cart"
 ```
 
-To use the option of bypass the mock and issue real http request, the resource files should look like this:
+### Bypassing mocks
+
+ To use the option of bypass the mock and issue real http request, the resource files should look like this:
 
 ```json
 {

@@ -69,9 +69,11 @@ angular
               }
               return [200, mock.response, mockHeaders];
             });
-        } if (mock.passThrough) {
-          $httpBackend.
-          when(mock.httpMethod, uriRegExp, mock.requestData).passThrough();
+        }
+        if (mock.passThrough) {
+          $httpBackend
+            .when(mock.httpMethod, uriRegExp, mock.requestData)
+            .passThrough();
         } else {
           $httpBackend
             .when(mock.httpMethod, uriRegExp, mock.requestData)
