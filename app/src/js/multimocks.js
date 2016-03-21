@@ -69,7 +69,7 @@ angular
               }
               return [200, mock.response, mockHeaders];
             });
-        } if (mock.passThrough){
+        } if (mock.passThrough) {
           $httpBackend.
           when(mock.httpMethod, uriRegExp, mock.requestData).passThrough();
         } else {
