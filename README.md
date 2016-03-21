@@ -103,6 +103,17 @@ and can contain a regex:
 "uri": "/customer/\\d*/cart"
 ```
 
+To use the option of bypass the mock and issue real http request, the resource files should look like this:
+
+```json
+{
+  "httpMethod": "GET",
+  "statusCode": 200,
+  "uri": "/customer/cart",
+  "passThrough": true
+}
+```
+
 ### Delayed responses
 
 In some scenarios you may want to simulate a server/network delay.
